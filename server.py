@@ -1,11 +1,25 @@
+#server
 import asyncio
 import websockets
+import pandas as pd
+import json
 
-async def handler(ws, path):
-    msg = await ws.recv()
-    print("Received in server:", msg)
-    await ws.send("ok got it")
+async def server_handler(websocket):
+    try:
+        message = await websocket.recv()
+        print("Received CSV data !!")
 
-start = websockets.serve(handler, "localhost", 8765)
-asyncio.get_event_loop().run_until_complete(start)
-asyncio.get_event_loop().run_forever()
+        # Convert JSON string back into DataFrame
+        df = pd.read_json(message)
+        print(df.head())   # show first 5 rows
+
+        await websocket.send("CSV file received and processed!")
+    except Exception as e:
+        print("Server error:", e)
+
+async def start_server():
+    server = await websockets.serve(server_handler, "localhost", 8851)  # changed port
+    print("Server running on ws://localhost:8851")
+    return server
+
+server = await start_server()
